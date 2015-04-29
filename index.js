@@ -1,17 +1,23 @@
 var socketIo = require('socket.io-client'),
-    RocketLauncher = require('./launcher').RocketLauncher;
+    RocketLauncher = require('./launcher').RocketLauncher,
+    serverIp = process.env.SERVER_IP,
+    serverPort = process.env.SERVER_PORT;
+
+if(!serverIp)
+  serverIp = '127.0.0.1'
+
+if(!serverPort)
+  serverPort = 3000
 
 rocketLauncher = new RocketLauncher();
 
-socket = socketIo('http://192.168.1.24:3000');
+socket = socketIo('http://' + serverIp +':3000');
 rocketLauncher.init();
-
-rocketLauncher.testFunctions();
 
 socket.on('connect',
   function(){
     console.log('connected');
-    socket.emit('imarobot', { named: 'Joe' });
+    socket.emit('imarobot');
   }
 );
 
@@ -23,40 +29,17 @@ socket.on('disconnect',
   function(){ console.log('disconnected') }
 );
 
-socket.on('keypress',
+var performAction = function(action) {
+  rocketLauncher[action]();
+  console.log('performed action ' + action);
+}
+
+socket.on('keydown',
   function(data){
-    switch(data) {
-      case 'shoot':
-        rocketLauncher.shoot();
-        setTimeout(
-          function() { rocketLauncher.boom() }, 8000
-          );
-        break;
-      case 'left':
-        rocketLauncher.left();
-        setTimeout(
-          function() { rocketLauncher.stop() }, 100
-        );
-        break;
-      case 'right':
-        rocketLauncher.right();
-        setTimeout(
-          function() { rocketLauncher.stop() }, 100
-        );
-        break;
-      case 'up':
-        rocketLauncher.up();
-        setTimeout(
-          function() { rocketLauncher.stop() }, 100
-        );
-        break;
-      case 'down':
-        rocketLauncher.down();
-        setTimeout(
-          function() { rocketLauncher.stop() }, 100
-        );
-        break;
-    }
+    performAction(data);
   }
 );
 
+socket.on('stop',
+  function(data) { rocketLauncher.stop() }
+);
