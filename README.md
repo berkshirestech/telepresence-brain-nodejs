@@ -19,6 +19,10 @@ removed in favor of code that interfaces with the camera swivel system.
 - [Rocket launcher](http://dreamcheeky.com/thunder-missile-launcher) See note
   above. This is temporary.
 
+## Installation
+
+- `npm install`
+
 ## Usage
 
 ``` bash
