@@ -9,7 +9,7 @@ function scanForArduino(callback){
       console.log(port.comName);
       console.log(port.pnpId);
       console.log(port.manufacturer);
-      if(port.manufacturer == 'Arduino__www.arduino.cc_') {
+      if(port.manufacturer.indexOf('Arduino') >= 0) {
         callback(null, port.comName);
         return;
       }
@@ -30,6 +30,7 @@ function connectToArduino(err, serialPortName) {
       serverIp = process.env.SERVER_IP || '127.0.0.1',
       serverPort = process.env.SERVER_PORT || 3000;
 
+  console.log("connecting to: " + 'http://' + serverIp +':'+serverPort);
   socket = socketIo('http://' + serverIp +':'+serverPort);
 
   socket.on('connect',
@@ -49,7 +50,7 @@ function connectToArduino(err, serialPortName) {
 
   var performAction = function(action) {
     console.log("action: " + action);
-    serialPort.write(action+"\n", function(err, results) {
+    serialPort.write(action, function(err, results) {
       if(err) console.log('err ' + err);
     });
   }
@@ -73,7 +74,7 @@ function connectToArduino(err, serialPortName) {
 
   function stop(){
     console.log("stopping");
-    serialPort.write("s\n", function(err, results) {
+    serialPort.write("s", function(err, results) {
       if(err) console.log('err ' + err);
     });
   }
