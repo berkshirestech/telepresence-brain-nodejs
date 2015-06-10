@@ -26,7 +26,7 @@ var main = function(serialPortName) {
   if(!serverPort)
     serverPort = 3000
 
-  socket = socketIo('http://' + serverIp +':3000');
+  socket = socketIo('http://' + serverIp +':'+serverPort);
 
   socket.on('connect',
     function(){
