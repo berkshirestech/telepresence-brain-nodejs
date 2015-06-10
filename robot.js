@@ -1,30 +1,34 @@
 var sp = require("serialport");
-sp.list(function (err, ports) {
-  ports.forEach(function(port) {
-    console.log(port.comName);
-    console.log(port.pnpId);
-    console.log(port.manufacturer);
-    if(port.manufacturer == 'Arduino__www.arduino.cc_') {
-      main(port.comName);
-      return;
-    }
-  });
-});
 
-var main = function(serialPortName) {
+function scanForArduino(callback){
+  sp.list(function (err, ports) {
+    if(err){
+      callback(err);
+    }
+    ports.forEach(function(port) {
+      console.log(port.comName);
+      console.log(port.pnpId);
+      console.log(port.manufacturer);
+      if(port.manufacturer == 'Arduino__www.arduino.cc_') {
+        callback(null, port.comName);
+        return;
+      }
+    });
+  });
+}
+
+function connectToArduino(err, serialPortName) {
+  if(err){
+    console.error(err);
+    process.exit(1);
+  }
   var SerialPort = sp.SerialPort
   var serialPort = new SerialPort(serialPortName, {
     baudrate: 9600
   });
   var socketIo = require('socket.io-client'),
-      serverIp = process.env.SERVER_IP,
-      serverPort = process.env.SERVER_PORT;
-
-  if(!serverIp)
-    serverIp = '127.0.0.1'
-
-  if(!serverPort)
-    serverPort = 3000
+      serverIp = process.env.SERVER_IP || '127.0.0.1',
+      serverPort = process.env.SERVER_PORT || 3000;
 
   socket = socketIo('http://' + serverIp +':'+serverPort);
 
@@ -44,6 +48,7 @@ var main = function(serialPortName) {
   );
 
   var performAction = function(action) {
+    console.log("action: " + action);
     serialPort.write(action+"\n", function(err, results) {
       if(err) console.log('err ' + err);
     });
@@ -66,14 +71,6 @@ var main = function(serialPortName) {
     });
   });
 
-  function forward(){
-    console.log("going forward");
-    serialPort.write("f\n", function(err, results) {
-      if(err) console.log('err ' + err);
-      setTimeout(stop, 5000);
-    });
-  }
-
   function stop(){
     console.log("stopping");
     serialPort.write("s\n", function(err, results) {
@@ -81,3 +78,5 @@ var main = function(serialPortName) {
     });
   }
 }
+
+scanForArduino(connectToArduino);
