@@ -1,14 +1,19 @@
+var serialPortName = null;
 var sp = require("serialport");
 sp.list(function (err, ports) {
   ports.forEach(function(port) {
     console.log(port.comName);
     console.log(port.pnpId);
     console.log(port.manufacturer);
+    if(port.manufacturer == 'Arduino__www.arduino.cc_') {
+      serialPortName = port.comName;
+      break;
+    }
   });
 });
 
 var SerialPort = sp.SerialPort
-var serialPort = new SerialPort("/dev/cu.usbmodem1411", {
+var serialPort = new SerialPort(serialPortName, {
   baudrate: 9600
 });
 var socketIo = require('socket.io-client'),
