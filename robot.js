@@ -11,7 +11,6 @@ function scanForArduino(callback){
       console.log(port.manufacturer);
       if(port.manufacturer.indexOf('Arduino') >= 0) {
         callback(null, port.comName);
-        return;
       }
     });
   });
@@ -26,12 +25,39 @@ function connectToArduino(err, serialPortName) {
   var serialPort = new SerialPort(serialPortName, {
     baudrate: 9600
   });
+
+  var performAction = function(action) {
+    console.log("action: " + action);
+    serialPort.write(action, function(err, results) {
+      if(err) console.log('err ' + err);
+    });
+  }
+
+  serialPort.on("open", function () {
+    console.log('open');
+    serialPort.on('data', function(data) {
+      console.log('data received: ' + data);
+    });
+  });
+}
+
+function connectToServer(){
   var socketIo = require('socket.io-client'),
       serverIp = process.env.SERVER_IP || '127.0.0.1',
       serverPort = process.env.SERVER_PORT || 3000;
 
   console.log("connecting to: " + 'http://' + serverIp +':'+serverPort);
   socket = socketIo('http://' + serverIp +':'+serverPort);
+
+  socket.on('keydown',
+    function(data){
+      performAction(data);
+    }
+  );
+
+  socket.on('stop',
+    function(data) { stop() }
+  );
 
   socket.on('connect',
     function(){
@@ -48,31 +74,8 @@ function connectToArduino(err, serialPortName) {
     function(){ console.log('disconnected') }
   );
 
-  var performAction = function(action) {
-    console.log("action: " + action);
-    serialPort.write(action, function(err, results) {
-      if(err) console.log('err ' + err);
-    });
-  }
 
-  socket.on('keydown',
-    function(data){
-      performAction(data);
-    }
-  );
-
-  socket.on('stop',
-    function(data) { stop() }
-  );
-
-  serialPort.on("open", function () {
-    console.log('open');
-    serialPort.on('data', function(data) {
-      console.log('data received: ' + data);
-    });
-  });
-
-  function stop(){
+  var stopHead = function(){
     console.log("stopping");
     serialPort.write("s", function(err, results) {
       if(err) console.log('err ' + err);
