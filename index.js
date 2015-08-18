@@ -99,9 +99,20 @@ function connectToServer(headPort, legsPort){
     function(){ console.log('disconnected') }
   );
 
+  /**
+   * Sends an action command to the correct port (head or legs)
+   *
+   * @param action The command which should be forwarded to the right port
+   */
   var performAction = function(action) {
     console.log("action: " + action);
-    var serialPort = action === action.toUpperCase()?headPort:legsPort;
+    var forHead = action === action.toUpperCase();//head actions are uppercase
+    var serialPort = forHead?headPort:legsPort;
+    if(!forHead){
+      headPort.write("C", function(err, results) {
+        if(err) console.log('err ' + err);
+      });
+    }
     serialPort.write(action, function(err, results) {
       if(err) console.log('err ' + err);
     });
